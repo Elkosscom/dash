@@ -15,47 +15,56 @@ external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div(
-            [
-                html.Div(
-                    [
-                        # html.H3('test'),
-                        html.Label('X Axis:'),
-                        dcc.Dropdown(
-                            id="graph_x",
-                            options=[
-                                {"label": i, "value": i} for i in ["Date", "Month"]
-                            ],
-                            value="Date",
-                            multi=False,
-                        ),
-                        html.Label('Y Axis:'),
-                        dcc.Dropdown(
-                            id="graph_y",
-                            options=[
-                                {"label": i, "value": i}
-                                for i in ["Quantity", "Gross", "Net"]
-                            ],
-                            value="Net",
-                            multi=False,
-                        ),
-                        html.Label('Colour:'),
-                        dcc.Dropdown(
-                            id="graph_color",
-                            options=[
-                                {"label": i, "value": i}
-                                for i in ["Client", "Depo", "Item"]
-                            ],
-                            value="Item",
-                            multi=False,
-                        ),
-                    ],
-                    style={"width": "25%", "float": "left", "height": "150%"},
-                ),
-                # html.H3('Sales Graph',style={'width':'75%', 'display': 'inline-block','textAlign':'center'}),
-                dcc.Graph(id="graph",style={"width": "75%", "display": "inline-block"}),
-            ],
-        )
-
+    # ROW 1
+    html.Div(
+        [
+            html.Div(
+                [
+                    html.Label("X Axis:"),
+                    dcc.Dropdown(
+                        id="graph_x",
+                        options=[{"label": i, "value": i} for i in ["Date", "Month"]],
+                        value="Date",
+                        multi=False,
+                    ),
+                    html.Label("Y Axis:"),
+                    dcc.Dropdown(
+                        id="graph_y",
+                        options=[
+                            {"label": i, "value": i}
+                            for i in ["Quantity", "Gross", "Net"]
+                        ],
+                        value="Net",
+                        multi=False,
+                    ),
+                    html.Label("Colour:"),
+                    dcc.Dropdown(
+                        id="graph_color",
+                        options=[
+                            {"label": i, "value": i} for i in ["Client", "Depo", "Item"]
+                        ],
+                        value="Item",
+                        multi=False,
+                    ),
+                ],
+                style={
+                    "width": "25%",
+                    "float": "left",
+                    "height": "50%",
+                    "verticalAlign": "center",
+                    "paddingTop": "60px",
+                },
+            ),
+            dcc.Graph(id="graph", style={"width": "75%", "display": "inline-block"}),
+        ]
+    ),
+    style={
+        "display": "block",
+        "marginLeft": "auto",
+        "marginRight": "auto",
+        "width": "80%",
+    },
+)
 
 
 @app.callback(
@@ -67,7 +76,7 @@ app.layout = html.Div(
     ],
 )
 def update_graph(x, y, color):
-    return px.scatter(df, x=x, y=y, color=color,title='Sales graph')
+    return px.scatter(df, x=x, y=y, color=color, title="Sales graph")
 
 
 if __name__ == "__main__":

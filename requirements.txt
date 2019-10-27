@@ -118,3 +118,4 @@ xarray==0.14.0
 xlrd==1.2.0
 zict==1.0.0
 zipp==0.6.0
+gunicorn==19.9.0

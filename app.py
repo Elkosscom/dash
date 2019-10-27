@@ -13,7 +13,7 @@ df["Month"] = pd.DatetimeIndex(df["Date"]).month
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+server = app.server
 app.layout = html.Div(
     [
         # ROW 1
@@ -178,4 +178,4 @@ def update_graph2(x, y, color, facet_row, facet_col):
 
 
 if __name__ == "__main__":
-    app.run_server()
+    app.run_server(debug=True)

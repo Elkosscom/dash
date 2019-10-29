@@ -87,7 +87,7 @@ row2 = html.Div(
                     id="graph2_x",
                     options=[
                         {"label": i, "value": i}
-                        for i in ["Date",'Month', "Net", "Gross", "Vat", "Quantity"]
+                        for i in ["Date", "Net", "Gross", "Vat", "Quantity"]
                     ],
                     value="Date",
                     multi=False,

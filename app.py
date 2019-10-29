@@ -7,17 +7,32 @@ import pandas as pd
 import numpy as np
 from dash.dependencies import Input, Output
 
-
+#########################
+# Loading Data
+#########################
 df = pd.read_excel("data.xlsx", sheet_name=1)
 df["Month"] = pd.DatetimeIndex(df["Date"]).month
 
 
+#########################
+# Lists and declarations
+#########################
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
+colors = {
+    "bgbackground": "#373737",
+    "bg": "#dfdce3",
+    "accent1": "#e37222",
+    "accent2": "#07889b",
+}
+style_text = {"backgroundColor": colors["bg"], "color:": colors["accent1"]}
+borders = {"border": "1px solid black", "border-radius": "15px"}
 
-#### ROWS
+#########################
+# Dashboard Sections
+#########################
+
 row1 = html.Div(
     [
         html.Div(
@@ -123,24 +138,23 @@ row2 = html.Div(
                 "paddingTop": "60px",
             },
         ),
-        dcc.Graph(id="graph2", style={"width": "75%", "display": "inline-block"}),
-    ]
+        dcc.Graph(id="graph2", style={"width": "73%", "display": "inline-block",'margin':3}),
+    ],
+    style=borders,
 )
 
 row3 = html.Div(
     [
         html.Div(
             [
+                html.H4("Options:",style={'verticalAlign':'top'}),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph3_x",
-                    options=[
-                        {"label": i, "value": i}
-                        for i in ["Date"]
-                    ],
+                    options=[{"label": i, "value": i} for i in ["Date"]],
                     value="Date",
                     multi=False,
-                    disabled=True
+                    disabled=True,
                 ),
                 html.Label("Y Axis:"),
                 dcc.Dropdown(
@@ -156,15 +170,15 @@ row3 = html.Div(
                 dcc.Dropdown(
                     id="graph3_color",
                     options=[
-                        {"label": i, "value": i}
-                        for i in ["Depo", "Client", "Item"]
+                        {"label": i, "value": i} for i in ["Depo", "Client", "Item"]
                     ],
                     value="Item",
                     multi=False,
                 ),
+                html.H4("   "),
                 dcc.Checklist(
                     "graph3_cum", options=[{"label": "Cumulative", "value": 1}]
-                )
+                ),
             ],
             style={
                 "width": "25%",
@@ -174,32 +188,63 @@ row3 = html.Div(
                 "paddingTop": "60px",
             },
         ),
-        dcc.Graph("graph3", style={"width": "75%", "display": "inline-block"}),
-    ]
-)
-#### Layout
-app.layout = html.Div(
-    [row1, row2, row3],
-    style={
-        "display": "block",
-        "marginLeft": "auto",
-        "marginRight": "auto",
-        "width": "80%",
-    },
-)
-
-
-#### Interactivity
-@app.callback(
-    Output("graph", "figure"),
-    [
-        Input("graph_x", "value"),
-        Input("graph_y", "value"),
-        Input("graph_color", "value"),
+        dcc.Graph("graph3", style={"width": "73%", "display": "inline-block",'margin':3}),
     ],
+    style=borders,
 )
-def update_graph(x, y, color):
-    return px.scatter(df, x=x, y=y, color=color, title="Sales graph")
+
+page_header = html.Div(
+    [
+        dcc.Markdown(
+            """ # **Dash**
+### _A dashboard made in Python_
+Welcome to the test page of Dash. This website is made completely in Python and
+serves as a playground for learning Dash library. Sales data is completely random.
+For source code visit [my repository](https://github.com/Elkosscom/dash)."""
+        )
+    ],
+    style=borders,
+)
+
+
+#########################
+# Dashboard Layout / View
+#########################
+
+app.layout = html.Div(  # Back-background
+    html.Div(  # Background narrow
+        [
+            page_header,
+             html.P(' '),
+             row2,
+             html.P(' '),
+             row3,
+        ],
+        style={
+            "display": "block",
+            "marginLeft": "auto",
+            "marginRight": "auto",
+            "width": "80%",
+            "height": "105%",
+        },
+    ),
+    style={"backgroundColor": colors["bg"]},
+)
+
+
+#############################################
+# Interaction Between Components / Controller
+#############################################
+# @app.callback(
+#     Output("graph", "figure"),
+#     [
+#         Input("graph_x", "value"),
+#         Input("graph_y", "value"),
+#         Input("graph_color", "value"),
+#     ],
+# )
+# def update_graph(x, y, color):
+#     return px.scatter(df, x=x, y=y, color=color, title="Sales graph")
 
 
 @app.callback(
@@ -220,7 +265,7 @@ def update_graph2(x, y, color, facet_row, facet_col):
         color=color,
         facet_row=facet_row,
         facet_col=facet_col,
-        title="Sales graph 2",
+        title="Sales Scatter Graph",
     )
 
 
@@ -234,7 +279,7 @@ def update_graph2(x, y, color, facet_row, facet_col):
     ],
 )
 def update_graph3(x, y, color, cumulative):
-    df_return = df.groupby(by=(x,color), axis=0).agg(
+    df_return = df.groupby(by=[x, color], axis=0).agg(
         Quantity=("Quantity", "sum"),
         Price=("Price", np.mean),
         Net=("Net", "sum"),
@@ -243,12 +288,20 @@ def update_graph3(x, y, color, cumulative):
     )
     if cumulative:
         df_return = df_return.groupby(level=1).cumsum()
-    df2 = df_return.reset_index(level=[0,1])
-    fig = go.Figure()
+    df2 = df_return.reset_index(level=[0, 1])
+    fig = go.Figure(layout={"title": "Sales Line Graph"})
     for line in df[color].unique():
-        fig.add_trace(go.Scatter(x=df2[df2[color]==line][x],y=df2[df2[color]==line][y],mode='lines',name=line))
+        fig.add_trace(
+            go.Scatter(
+                x=df2[df2[color] == line][x],
+                y=df2[df2[color] == line][y],
+                mode="lines",
+                name=line,
+            )
+        )
     return fig
 
 
+# start Flask server
 if __name__ == "__main__":
     app.run_server(debug=True)

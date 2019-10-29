@@ -2,6 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from dash.dependencies import Input, Output
@@ -135,17 +136,18 @@ row3 = html.Div(
                     id="graph3_x",
                     options=[
                         {"label": i, "value": i}
-                        for i in ["Date", "Depo", "Client", "Item"]
+                        for i in ["Date"]
                     ],
                     value="Date",
                     multi=False,
+                    disabled=True
                 ),
                 html.Label("Y Axis:"),
                 dcc.Dropdown(
                     id="graph3_y",
                     options=[
                         {"label": i, "value": i}
-                        for i in ["Date", "Net", "Gross", "Vat", "Quantity"]
+                        for i in ["Net", "Gross", "VAT", "Quantity"]
                     ],
                     value="Gross",
                     multi=False,
@@ -155,7 +157,7 @@ row3 = html.Div(
                     id="graph3_color",
                     options=[
                         {"label": i, "value": i}
-                        for i in ["Depo", "Client", "Item", "Month"]
+                        for i in ["Depo", "Client", "Item"]
                     ],
                     value="Item",
                     multi=False,
@@ -163,26 +165,6 @@ row3 = html.Div(
                 dcc.Checklist(
                     "graph3_cum", options=[{"label": "Cumulative", "value": 1}]
                 )
-                # html.Label("Facet row:"),
-                # dcc.Dropdown(
-                #     id="graph3_facet_row",
-                #     options=[
-                #         {"label": i, "value": i}
-                #         for i in ["Depo", "Client", "Item", "Month"]
-                #     ],
-                #     value=None,
-                #     multi=False,
-                # ),
-                # html.Label("Facet column:"),
-                # dcc.Dropdown(
-                #     id="graph2_facet_col",
-                #     options=[
-                #         {"label": i, "value": i}
-                #         for i in ["Depo", "Client", "Item", "Month"]
-                #     ],
-                #     value=None,
-                #     multi=False,
-                # ),
             ],
             style={
                 "width": "25%",
@@ -251,8 +233,8 @@ def update_graph2(x, y, color, facet_row, facet_col):
         Input("graph3_cum", "value"),
     ],
 )
-def update_graph3(x, y, color, cumulative):  # TODO: Use plotly.go to plot this graph
-    df_return = df.groupby(by=[x, y, color], axis=0).agg(
+def update_graph3(x, y, color, cumulative):
+    df_return = df.groupby(by=(x,color), axis=0).agg(
         Quantity=("Quantity", "sum"),
         Price=("Price", np.mean),
         Net=("Net", "sum"),
@@ -260,8 +242,12 @@ def update_graph3(x, y, color, cumulative):  # TODO: Use plotly.go to plot this 
         Gross=("Gross", "sum"),
     )
     if cumulative:
-        pass
-    return px.line(df_return, x=x, y=y, color=color)
+        df_return = df_return.groupby(level=1).cumsum()
+    df2 = df_return.reset_index(level=[0,1])
+    fig = go.Figure()
+    for line in df[color].unique():
+        fig.add_trace(go.Scatter(x=df2[df2[color]==line][x],y=df2[df2[color]==line][y],mode='lines',name=line))
+    return fig
 
 
 if __name__ == "__main__":

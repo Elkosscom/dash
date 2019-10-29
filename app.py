@@ -12,6 +12,7 @@ from dash.dependencies import Input, Output
 #########################
 df = pd.read_excel("data.xlsx", sheet_name=1)
 df["Month"] = pd.DatetimeIndex(df["Date"]).month
+df['Month'].replace({1:'Jan',2:'Feb',3:'Mar'},inplace=True)
 
 
 #########################
@@ -37,6 +38,7 @@ row1 = html.Div(
     [
         html.Div(
             [
+                html.H6('Options:'),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph_x",
@@ -79,12 +81,13 @@ row2 = html.Div(
     [
         html.Div(
             [
+                html.H6("Options:", style={'verticalAlign': 'top'}),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph2_x",
                     options=[
                         {"label": i, "value": i}
-                        for i in ["Date", "Net", "Gross", "Vat", "Quantity"]
+                        for i in ["Date",'Month', "Net", "Gross", "Vat", "Quantity"]
                     ],
                     value="Date",
                     multi=False,
@@ -147,7 +150,7 @@ row3 = html.Div(
     [
         html.Div(
             [
-                html.H4("Options:",style={'verticalAlign':'top'}),
+                html.H6("Options:",style={'verticalAlign':'top'}),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph3_x",

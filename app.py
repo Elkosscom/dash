@@ -9,19 +9,14 @@ from dash.dependencies import Input, Output
 # Other imports
 import pandas as pd
 import numpy as np
-import requests
 
 
 #########################
 # Loading Data
 #########################
-
-# Sales data
-df_sales = pd.read_excel("data.xlsx", sheet_name=1)
-df_sales["Month"] = pd.DatetimeIndex(df_sales["Date"]).month
-df_sales["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
-
-# Currency data
+df = pd.read_excel("data.xlsx", sheet_name=1)
+df["Month"] = pd.DatetimeIndex(df["Date"]).month
+df["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 
 #########################
@@ -43,8 +38,6 @@ style_div = {**borders, **{"backgroundColor": colors["bglight"]}}
 #########################
 # Dashboard Sections
 #########################
-
-##### Sales tab
 sales_scatter_div = html.Div(
     [
         html.Div(
@@ -173,48 +166,26 @@ page_header = html.Div(
         dcc.Markdown(
             """ ## **Dash**
 ### _A dashboard made in Python_""",
-            style={"textAlign": "center", "backgroundColor": colors["bglight"]},
+            style={"textAlign": "center",'backgroundColor':colors['bglight']},
         ),
         dcc.Markdown(
             """
 Welcome to the test page of Dash. This website is made completely in Python and
-serves as a playground for learning Dash library. 
+serves as a playground for learning Dash library. Sales data is completely random.
 For source code visit [my repository](https://github.com/Elkosscom/dash)."""
         ),
     ],
     style=style_div,
 )
 
-sales_tab_content = (
-    html.Div(
-        [
-            dcc.Markdown(
-                """Sales data is random, source file available on the github repo."""
-            ),
-            html.P(" "),
-            sales_scatter_div,
-            html.P(" "),
-            sales_line_div,
-        ]
-    ),
-)
-##### TODO: Currency tab
-currency_tab_content = None
 
-##### Tab bar
-tabs = dcc.Tabs(id='tab-bar',value='sales-tab',children=[
-    dcc.Tab(label='Sales',value='sales-tab'),
-    dcc.Tab(label='Currency',value='currency-tab')
-])
-
-tab_content = html.Div(id='tab-content')
 #########################
 # Dashboard Layout / View
 #########################
 
 app.layout = html.Div(  # Back-background
     html.Div(  # Background narrow
-        [page_header, tabs, html.P(" "), tab_content],
+        [page_header, html.P(" "), sales_scatter_div, html.P(" "), sales_line_div],
         style={
             "display": "block",
             "marginLeft": "auto",
@@ -242,7 +213,7 @@ app.layout = html.Div(  # Back-background
 )
 def update_graph2(x, y, color, facet_row, facet_col):
     return px.scatter(
-        df_sales,
+        df,
         x=x,
         y=y,
         color=color,
@@ -262,7 +233,7 @@ def update_graph2(x, y, color, facet_row, facet_col):
     ],
 )
 def update_graph3(x, y, color, cumulative):
-    df_return = df_sales.groupby(by=[x, color], axis=0).agg(
+    df_return = df.groupby(by=[x, color], axis=0).agg(
         Quantity=("Quantity", "sum"),
         Price=("Price", np.mean),
         Net=("Net", "sum"),
@@ -273,7 +244,7 @@ def update_graph3(x, y, color, cumulative):
         df_return = df_return.groupby(level=1).cumsum()
     df2 = df_return.reset_index(level=[0, 1])
     fig = go.Figure(layout={"title": "Sales Line Graph"})
-    for line in df_sales[color].unique():
+    for line in df[color].unique():
         fig.add_trace(
             go.Scatter(
                 x=df2[df2[color] == line][x],
@@ -283,17 +254,6 @@ def update_graph3(x, y, color, cumulative):
             )
         )
     return fig
-
-
-@app.callback(
-    Output('tab-content','children'),
-    [Input('tab-bar','value')]
-)
-def update_tab_content(tab):
-    if tab == 'sales-tab':
-        return sales_tab_content
-    elif tab == 'currency-tab':
-        return currency_tab_content
 
 
 # start Flask server

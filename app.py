@@ -1,18 +1,22 @@
+# Import Dash and Plotly libraries
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
 import plotly.graph_objects as go
+from dash.dependencies import Input, Output
+
+# Other imports
 import pandas as pd
 import numpy as np
-from dash.dependencies import Input, Output
+
 
 #########################
 # Loading Data
 #########################
 df = pd.read_excel("data.xlsx", sheet_name=1)
 df["Month"] = pd.DatetimeIndex(df["Date"]).month
-df['Month'].replace({1:'Jan',2:'Feb',3:'Mar'},inplace=True)
+df["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 
 #########################
@@ -22,66 +26,23 @@ external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 colors = {
-    "bgbackground": "#373737",
-    "bg": "#dfdce3",
+    "bg": "#373737",
+    "bglight": "#dfdce3",
     "accent1": "#e37222",
     "accent2": "#07889b",
 }
 style_text = {"backgroundColor": colors["bg"], "color:": colors["accent1"]}
 borders = {"border": "1px solid black", "border-radius": "15px"}
+style_div = {**borders, **{"backgroundColor": colors["bglight"]}}
 
 #########################
 # Dashboard Sections
 #########################
-
-row1 = html.Div(
+sales_scatter_div = html.Div(
     [
         html.Div(
             [
-                html.H6('Options:'),
-                html.Label("X Axis:"),
-                dcc.Dropdown(
-                    id="graph_x",
-                    options=[{"label": i, "value": i} for i in ["Date", "Month"]],
-                    value="Date",
-                    multi=False,
-                ),
-                html.Label("Y Axis:"),
-                dcc.Dropdown(
-                    id="graph_y",
-                    options=[
-                        {"label": i, "value": i} for i in ["Quantity", "Gross", "Net"]
-                    ],
-                    value="Net",
-                    multi=False,
-                ),
-                html.Label("Colour:"),
-                dcc.Dropdown(
-                    id="graph_color",
-                    options=[
-                        {"label": i, "value": i} for i in ["Client", "Depo", "Item"]
-                    ],
-                    value="Item",
-                    multi=False,
-                ),
-            ],
-            style={
-                "width": "25%",
-                "float": "left",
-                "height": "50%",
-                "verticalAlign": "center",
-                "paddingTop": "60px",
-            },
-        ),
-        dcc.Graph(id="graph", style={"width": "75%", "display": "inline-block"}),
-    ]
-)
-
-row2 = html.Div(
-    [
-        html.Div(
-            [
-                html.H6("Options:", style={'verticalAlign': 'top'}),
+                html.H6("Options:", style={"verticalAlign": "top"}),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph2_x",
@@ -141,16 +102,18 @@ row2 = html.Div(
                 "paddingTop": "60px",
             },
         ),
-        dcc.Graph(id="graph2", style={"width": "73%", "display": "inline-block",'margin':3}),
+        dcc.Graph(
+            id="graph2", style={"width": "73%", "display": "inline-block", "margin": 3}
+        ),
     ],
-    style=borders,
+    style=style_div,
 )
 
-row3 = html.Div(
+sales_line_div = html.Div(
     [
         html.Div(
             [
-                html.H6("Options:",style={'verticalAlign':'top'}),
+                html.H6("Options:", style={"verticalAlign": "top"}),
                 html.Label("X Axis:"),
                 dcc.Dropdown(
                     id="graph3_x",
@@ -191,22 +154,28 @@ row3 = html.Div(
                 "paddingTop": "60px",
             },
         ),
-        dcc.Graph("graph3", style={"width": "73%", "display": "inline-block",'margin':3}),
+        dcc.Graph(
+            "graph3", style={"width": "73%", "display": "inline-block", "margin": 3}
+        ),
     ],
-    style=borders,
+    style=style_div,
 )
 
 page_header = html.Div(
     [
         dcc.Markdown(
-            """ # **Dash**
-### _A dashboard made in Python_
+            """ ## **Dash**
+### _A dashboard made in Python_""",
+            style={"textAlign": "center",'backgroundColor':colors['bglight']},
+        ),
+        dcc.Markdown(
+            """
 Welcome to the test page of Dash. This website is made completely in Python and
 serves as a playground for learning Dash library. Sales data is completely random.
 For source code visit [my repository](https://github.com/Elkosscom/dash)."""
-        )
+        ),
     ],
-    style=borders,
+    style=style_div,
 )
 
 
@@ -216,13 +185,7 @@ For source code visit [my repository](https://github.com/Elkosscom/dash)."""
 
 app.layout = html.Div(  # Back-background
     html.Div(  # Background narrow
-        [
-            page_header,
-             html.P(' '),
-             row2,
-             html.P(' '),
-             row3,
-        ],
+        [page_header, html.P(" "), sales_scatter_div, html.P(" "), sales_line_div],
         style={
             "display": "block",
             "marginLeft": "auto",
@@ -238,18 +201,6 @@ app.layout = html.Div(  # Back-background
 #############################################
 # Interaction Between Components / Controller
 #############################################
-# @app.callback(
-#     Output("graph", "figure"),
-#     [
-#         Input("graph_x", "value"),
-#         Input("graph_y", "value"),
-#         Input("graph_color", "value"),
-#     ],
-# )
-# def update_graph(x, y, color):
-#     return px.scatter(df, x=x, y=y, color=color, title="Sales graph")
-
-
 @app.callback(
     Output("graph2", "figure"),
     [

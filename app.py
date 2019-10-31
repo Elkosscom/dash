@@ -19,11 +19,9 @@ df_sales["Month"] = pd.DatetimeIndex(df_sales["Date"]).month
 df_sales["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 # Currency data
-
 df = pd.read_excel("data.xlsx", sheet_name=1)
 df["Month"] = pd.DatetimeIndex(df["Date"]).month
 df["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
-
 
 
 #########################
@@ -203,12 +201,16 @@ sales_tab_content = (
 currency_tab_content = None
 
 ##### Tab bar
-tabs = dcc.Tabs(id='tab-bar',value='sales-tab',children=[
-    dcc.Tab(label='Sales',value='sales-tab'),
-    dcc.Tab(label='Currency',value='currency-tab')
-])
+tabs = dcc.Tabs(
+    id="tab-bar",
+    value="sales-tab",
+    children=[
+        dcc.Tab(label="Sales", value="sales-tab"),
+        dcc.Tab(label="Currency", value="currency-tab"),
+    ],
+)
 
-tab_content = html.Div(id='tab-content')
+tab_content = html.Div(id="tab-content")
 #########################
 # Dashboard Layout / View
 #########################
@@ -286,14 +288,11 @@ def update_graph3(x, y, color, cumulative):
     return fig
 
 
-@app.callback(
-    Output('tab-content','children'),
-    [Input('tab-bar','value')]
-)
+@app.callback(Output("tab-content", "children"), [Input("tab-bar", "value")])
 def update_tab_content(tab):
-    if tab == 'sales-tab':
+    if tab == "sales-tab":
         return sales_tab_content
-    elif tab == 'currency-tab':
+    elif tab == "currency-tab":
         return currency_tab_content
 
 

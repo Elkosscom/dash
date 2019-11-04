@@ -7,21 +7,19 @@ from dash.dependencies import Input, Output
 
 import pandas as pd
 import numpy as np
+import currency_data
 
 
 #########################
 # Loading Data
 #########################
-
 # Sales data
 df_sales = pd.read_excel("data.xlsx", sheet_name=1)
 df_sales["Month"] = pd.DatetimeIndex(df_sales["Date"]).month
 df_sales["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 # Currency data
-df = pd.read_excel("data.xlsx", sheet_name=1)
-df["Month"] = pd.DatetimeIndex(df["Date"]).month
-df["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
+df = pd.read_json(currency_data.filename)
 
 
 #########################
@@ -167,6 +165,26 @@ sales_line_div = html.Div(
     style=style_div,
 )
 
+sales_tab_content = (
+    html.Div(
+        [
+            dcc.Markdown(
+                """Sales data is random, source file available on the github repo."""
+            ),
+            html.P(" "),
+            sales_scatter_div,
+            html.P(" "),
+            sales_line_div,
+        ]
+    ),
+)
+
+
+##### TODO: Currency tab
+currency_tab_content = None
+
+
+##### Page header
 page_header = html.Div(
     [
         dcc.Markdown(
@@ -184,21 +202,6 @@ For source code visit [my repository](https://github.com/Elkosscom/dash)."""
     style=style_div,
 )
 
-sales_tab_content = (
-    html.Div(
-        [
-            dcc.Markdown(
-                """Sales data is random, source file available on the github repo."""
-            ),
-            html.P(" "),
-            sales_scatter_div,
-            html.P(" "),
-            sales_line_div,
-        ]
-    ),
-)
-##### TODO: Currency tab
-currency_tab_content = None
 
 ##### Tab bar
 tabs = dcc.Tabs(

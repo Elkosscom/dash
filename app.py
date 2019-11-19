@@ -19,7 +19,9 @@ df_sales["Month"] = pd.DatetimeIndex(df_sales["Date"]).month
 df_sales["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 # Currency data
-df = pd.read_json(currency_data.filename)
+currency_data.main()
+df = pd.read_csv(currency_data.filename)
+
 
 
 #########################

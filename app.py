@@ -201,7 +201,7 @@ sales_tab_content = (
 )
 
 
-##### TODO: Currency tab
+#####
 currency = html.Div(
     [
         html.Div(
@@ -210,7 +210,8 @@ currency = html.Div(
                 dash_table.DataTable(
                     data=df_currency_mini.to_dict(orient="records"),
                     columns=[{"id": c, "name": c} for c in df_currency_mini.columns],
-                    id='currency-table'
+                    id='currency-table',
+                    selected_cells=[{'row': 0, 'column': 1, 'column_id': 'Buy'}],
                 )
             ],
             style={

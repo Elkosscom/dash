@@ -29,12 +29,11 @@ def fetch_tables(base_list, start_at, end_at):
     return df_return.drop_duplicates()
 
 
-bases = ["GBP", "EUR", "USD", "PLN",'JPY','CAD','CHF','AUD']
+bases = ["GBP", "EUR", "USD", "PLN", "JPY", "CAD", "CHF", "AUD"]
 date_range = dt.timedelta(365)
 start_date = str(dt.date.today() - date_range)
 end_date = str(dt.date.today())
 filename = f"currency_{dt.date.today()}.csv"
-
 
 
 def main():

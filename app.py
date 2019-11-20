@@ -4,11 +4,11 @@ import dash_html_components as html
 import plotly.express as px
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
+import dash_table
 
 import pandas as pd
 import numpy as np
 import currency_data
-
 
 #########################
 # Loading Data
@@ -20,15 +20,32 @@ df_sales["Month"].replace({1: "Jan", 2: "Feb", 3: "Mar"}, inplace=True)
 
 # Currency data
 currency_data.main()
-df = pd.read_csv(currency_data.filename)
+target_currencies = currency_data.bases[1:]
 
+# Load and transform currency data to small buy/sell table with GBP base
+df_currency_mini = pd.read_csv(currency_data.filename, index_col=(0, 1), header=0)
+curr_last_date = df_currency_mini.index.levels[0][-1]
+df_currency_mini = df_currency_mini.loc[
+    (df_currency_mini.index.get_level_values(1).isin(currency_data.bases))
+    & (df_currency_mini.index.get_level_values(0) == curr_last_date)
+]
+df_currency_mini = pd.DataFrame(df_currency_mini.droplevel(0))
+currency_dict = {}
+for curr in target_currencies:
+    currency_dict[curr] = {"Buy": df_currency_mini.at[curr, "GBP"], "Sell": df_currency_mini.at["GBP", curr]}
 
-
+df_currency_mini = pd.DataFrame.from_dict(currency_dict, orient="index")
+df_currency_mini = df_currency_mini.round(5).reset_index().rename(columns={"index": "Currency"})
+df_currency = pd.read_csv(currency_data.filename, index_col=(0, 1), header=0)
 #########################
 # Lists and declarations
 #########################
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(
+    __name__,
+    external_stylesheets=external_stylesheets,
+    suppress_callback_exceptions=True,
+)
 server = app.server
 colors = {
     "bg": "#373737",
@@ -106,6 +123,7 @@ sales_scatter_div = html.Div(
                 "height": "50%",
                 "verticalAlign": "center",
                 "paddingTop": "60px",
+                "paddingLeft": "5px",
             },
         ),
         dcc.Graph(
@@ -158,10 +176,11 @@ sales_line_div = html.Div(
                 "height": "50%",
                 "verticalAlign": "center",
                 "paddingTop": "60px",
+                "paddingLeft": "5px",
             },
         ),
         dcc.Graph(
-            "graph3", style={"width": "73%", "display": "inline-block", "margin": 3}
+            "graph3", style={"width": "73%", "display": "inline-block", "margin": '3'}
         ),
     ],
     style=style_div,
@@ -170,9 +189,9 @@ sales_line_div = html.Div(
 sales_tab_content = (
     html.Div(
         [
-            dcc.Markdown(
+            html.Div(dcc.Markdown(
                 """Sales data is random, source file available on the github repo."""
-            ),
+            ),style={**style_div,**{'paddingTop':'3px','paddingBottom':'2px','paddingLeft':'2px','paddingRight':'2px'}}),
             html.P(" "),
             sales_scatter_div,
             html.P(" "),
@@ -183,7 +202,35 @@ sales_tab_content = (
 
 
 ##### TODO: Currency tab
-currency_tab_content = None
+currency = html.Div(
+    [
+        html.Div(
+            [
+                html.Label(f'Currency rates as at {curr_last_date}:'),
+                dash_table.DataTable(
+                    data=df_currency_mini.to_dict(orient="records"),
+                    columns=[{"id": c, "name": c} for c in df_currency_mini.columns],
+                    id='currency-table'
+                )
+            ],
+            style={
+                "width": "25%",
+                "float": "left",
+                "verticalAlign": "center",
+                "paddingTop": "25px",
+                "paddingLeft": "5px",
+            },
+        ),
+        html.Div(dcc.Graph(id='graph-currency'), style={'display':'inline-block','width':'73%','margin':'3'})
+    ],
+    style={**style_div,**{'height':'100%'}},
+)
+
+currency_tab_content = html.Div(
+    [
+        currency
+    ], style=style_div
+)
 
 
 ##### Page header
@@ -212,7 +259,7 @@ tabs = dcc.Tabs(
     children=[
         dcc.Tab(label="Sales", value="sales-tab"),
         dcc.Tab(label="Currency", value="currency-tab"),
-    ],
+    ],style=style_div
 )
 
 tab_content = html.Div(id="tab-content")
@@ -231,7 +278,7 @@ app.layout = html.Div(  # Back-background
             "height": "105%",
         },
     ),
-    style={"backgroundColor": colors["bg"]},
+    style={"backgroundColor": colors["bg"],'height':'100%'},
 )
 
 
@@ -299,6 +346,30 @@ def update_tab_content(tab):
         return sales_tab_content
     elif tab == "currency-tab":
         return currency_tab_content
+
+
+@app.callback(Output('graph-currency','figure'),[Input('currency-table','selected_cells')])
+def update_graph_currency(selection):
+    fig = go.Figure(layout={"title": "GBP Currency Rates"})
+    for item in selection:
+        if item['column'] == 1:
+            base = df_currency_mini.iloc[item['row']]['Currency']
+            target = 'GBP'
+        elif item['column'] == 2:
+            base = 'GBP'
+            target = df_currency_mini.iloc[item['row']]['Currency']
+        else:
+            base='GBP'
+            target='GBP'
+        fig.add_trace(
+            go.Scatter(
+                x=df_currency[df_currency.index.get_level_values(1) == base].index.get_level_values(0),
+                y=df_currency[df_currency.index.get_level_values(1) == base][target].values,
+                name=f'{target}/{base}',
+                mode='lines'
+            )
+        )
+    return fig
 
 
 # start Flask server

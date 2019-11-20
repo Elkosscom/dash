@@ -35,14 +35,15 @@ start_date = str(dt.date.today() - date_range)
 end_date = str(dt.date.today())
 filename = f"currency_{dt.date.today()}.csv"
 
+
+
 def main():
 
     if f"currency_{dt.date.today()}.csv" in os.listdir():
         pass
     else:
         for file in os.listdir(os.getcwd()):
-            print(file)
-            if file.lower().endswith('.csv'):
+            if file.lower().endswith(".csv"):
                 os.remove(file)
         df = fetch_tables(bases, start_date, end_date)
         df.to_csv(f"currency_{dt.date.today()}.csv")
